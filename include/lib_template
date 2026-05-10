@@ -1,0 +1,7 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 RealTimeChris
+// lib_template-incl/lib_template
+
+#pragma once
+
+#include <lt-incl/config.hpp>

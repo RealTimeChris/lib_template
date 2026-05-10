@@ -1,0 +1,109 @@
+name: Benchmark
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            compiler: clang
+            name: "Ubuntu Clang"
+            cmake_cxx: clang++-21
+            cmake_cc: clang-21
+          - os: ubuntu-latest
+            compiler: gcc
+            name: "Ubuntu GCC"
+            cmake_cxx: g++-14
+            cmake_cc: gcc-14
+          - os: macos-latest
+            compiler: clang
+            name: "macOS Clang"
+            cmake_cxx: /opt/homebrew/opt/llvm/bin/clang++
+            cmake_cc: /opt/homebrew/opt/llvm/bin/clang
+          - os: macos-latest
+            compiler: gcc
+            name: "macOS GCC"
+            cmake_cxx: g++-15
+            cmake_cc: gcc-15 
+          - os: windows-latest
+            compiler: msvc
+            name: "Windows MSVC"
+            cmake_cxx: cl
+            cmake_cc: cl
+
+    runs-on: ${{ matrix.os }}
+    name: Build on ${{ matrix.name }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Clang (Ubuntu)
+        if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'clang'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod u+x llvm.sh
+          sudo ./llvm.sh 21
+
+      - name: Setup GCC (Ubuntu)
+        if: matrix.os == 'ubuntu-latest' && matrix.compiler == 'gcc'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++-15
+
+      - name: Setup Homebrew Dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          if [ "${{ matrix.compiler }}" = "clang" ]; then
+            brew install llvm
+          else
+            brew install gcc
+          fi
+
+      - name: Configure CMake (macOS-Clang)
+        if: matrix.os == 'macos-latest' && matrix.compiler == 'clang'
+        run: |    
+           export PATH="/opt/homebrew/opt/llvm/bin:$PATH"
+           export LDFLAGS="-L/opt/homebrew/opt/llvm/lib"
+           export CPPFLAGS="-I/opt/homebrew/opt/llvm/include"
+    
+           cmake -S . -B ./Build \
+           -DCMAKE_BUILD_TYPE=Release \
+           -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ \
+           -DLT_BENCHMARKS=TRUE
+
+      - name: Setup MSVC (Windows)
+        if: matrix.os == 'windows-latest'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Configure CMake
+        run: |
+          cmake -S . -B ./Build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.cmake_cxx }} -DCMAKE_C_COMPILER=${{ matrix.cmake_cc }} -DLT_BENCHMARKS=TRUE
+
+      - name: Build
+        run: cmake --build ./Build --config=Release
+
+      - name: Install (Unix)
+        if: runner.os != 'Windows'
+        run: sudo cmake --install ./Build --config=Release
+
+      - name: Install (Windows)
+        if: runner.os == 'Windows'
+        run: cmake --install ./Build --config=Release
+
+      - name: Run (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          sudo chmod +x /usr/local/bin/lib_template_benchmarks    
+          /usr/local/bin/lib_template_benchmarks
+
+      - name: Run (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          & "C:/Program Files (x86)/lib_template/bin/lib_template_benchmarks.exe"

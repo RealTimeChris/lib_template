@@ -1,0 +1,51 @@
+﻿{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "windows-unit-test",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/build/${presetName}",
+      "toolchainFile": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "LT_TESTS": true
+      }
+    },
+    {
+      "name": "windows-unit-test-debug",
+      "inherits": "windows-unit-test",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "windows-unit-test-release",
+      "inherits": "windows-unit-test",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "windows-benchmark",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/build/${presetName}",
+      "toolchainFile": "C:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "LT_BENCHMARKS": true
+      }
+    },
+    {
+      "name": "windows-benchmark-release",
+      "inherits": "windows-benchmark",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "windows-benchmark-debug",
+      "inherits": "windows-benchmark",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    }
+  ]
+}
